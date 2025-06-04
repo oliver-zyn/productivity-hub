@@ -1,0 +1,55 @@
+{
+  "name": "productivity-hub",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Hub de produtividade com IA, integração Teams e timer Pomodoro",
+  "keywords": [
+    "produtividade",
+    "pomodoro",
+    "teams",
+    "ia",
+    "typescript",
+    "react"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext ts,tsx --fix",
+    "type-check": "tsc --noEmit",
+    "setup": "node scripts/setup.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:vercel": "npm run deploy vercel",
+    "deploy:netlify": "npm run deploy netlify",
+    "deploy:github": "npm run deploy github",
+    "clean": "rm -rf dist node_modules/.vite",
+    "analyze": "npm run build && npx vite-bundle-analyzer dist"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^4.13.0",
+    "@tailwindcss/vite": "^4.1.8",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.512.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.8",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "name": "Productivity Hub - Assistente de Produtividade",
+  "short_name": "Productivity Hub",
+  "description": "Hub de produtividade com IA, integração Teams e timer Pomodoro",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1f2937",
+  "background_color": "#111827",
+  
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "pt-BR",
+  
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Productivity Hub - Desktop"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Productivity Hub - Mobile"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Chat IA",
+      "short_name": "IA",
+      "description": "Abrir chat com assistente IA",
+      "url": "/?chat=open",
+      "icons": [
+        {
+          "src": "/icons/chat-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Pomodoro",
+      "short_name": "Timer",
+      "description": "Iniciar timer Pomodoro",
+      "url": "/?pomodoro=start",
+      "icons": [
+        {
+          "src": "/icons/timer-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Nova Tarefa",
+      "short_name": "Tarefa",
+      "description": "Adicionar nova tarefa",
+      "url": "/?action=new-task",
+      "icons": [
+        {
+          "src": "/icons/task-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+productivity",
+      "url": "/?action=%s"
+    }
+  ],
+  
+  "prefer_related_applications": false
+}

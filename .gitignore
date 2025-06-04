@@ -1,0 +1,185 @@
+# =====================================================
+# PRODUCTIVITY HUB - .gitignore
+# =====================================================
+
+# Environment variables (IMPORTANTE - contém API keys)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Vite
+.vite
+
+# Rollup cache
+.rollup.cache
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Test files
+coverage/
+.nyc_output/
+
+# Storybook build outputs
+storybook-static/
+
+# PWA related
+sw.js.map
+
+# Backup files
+*.backup
+*.bak
+
+# Local development certificates
+*.pem
+*.crt
+*.key
+
+# Analytics and tracking
+.vercel
+.netlify
+
+# =====================================================
+# CUSTOM PRODUCTIVITY HUB FILES
+# =====================================================
+
+# Local user data (if implemented)
+/src/data/local/
+/public/user-data/
+
+# Generated assets
+/public/generated/
+
+# Documentation build
+/docs/.vitepress/cache
+/docs/.vitepress/dist
+
+# Testing
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# API documentation
+/api-docs/
+
+# Performance profiling
+/profiling/
+
+# =====================================================
+# IMPORTANTE - LEIA ANTES DE COMMITAR
+# =====================================================
+# 
+# ⚠️  NUNCA commite:
+# - Arquivos .env (contêm API keys)
+# - node_modules (muito pesado)
+# - Builds de produção (são gerados automaticamente)
+# - Dados pessoais ou de teste
+# 
+# ✅  Sempre commite:
+# - .env.example (sem valores reais)
+# - README.md atualizado
+# - Código fonte
+# - Configurações do projeto
+#
+# =====================================================
