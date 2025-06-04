@@ -1,7 +1,7 @@
 {
   "name": "Productivity Hub - Assistente de Produtividade",
   "short_name": "Productivity Hub",
-  "description": "Hub de produtividade com IA, integração Teams e timer Pomodoro",
+  "description": "Hub de produtividade com IA e timer Pomodoro",
   "version": "1.0.0",
   "manifest_version": 2,
   

@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
 import Tasks from "@/components/Tasks";
 import Projects from "@/components/Projects";
-import TeamsIntegration from "@/components/TeamsIntegration";
+import Meetings from "@/components/Meetings";
 import PomodoroTimer from "@/components/PomodoroTimer";
 import AIChat from "@/components/AIChat";
 import ConfigModal from "@/components/ConfigModal";
@@ -22,8 +22,8 @@ const App: React.FC = () => {
             {/* Dashboard Metrics */}
             <Dashboard />
 
-            {/* Teams Integration */}
-            <TeamsIntegration />
+            {/* Meetings */}
+            <Meetings />
 
             {/* Tasks */}
             <Tasks />

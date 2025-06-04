@@ -125,7 +125,6 @@ try {
   log('1. Configure suas API keys:', 'cyan');
   log('   • Edite o arquivo .env', 'yellow');
   log('   • Adicione sua OpenAI API key (obrigatório)', 'yellow');
-  log('   • Configure Teams (opcional)', 'yellow');
   
   log('\n2. Inicie o servidor de desenvolvimento:', 'cyan');
   log('   npm run dev', 'green');
@@ -135,7 +134,7 @@ try {
   
   log('\n4. Configure as integrações:', 'cyan');
   log('   • Clique no ícone de chave no header', 'yellow');
-  log('   • Siga as instruções para Teams e OpenAI', 'yellow');
+  log('   • Siga as instruções para OpenAI', 'yellow');
   
   console.log('\n📖 Documentação completa: README.md');
   console.log('🐛 Problemas? Verifique o troubleshooting no README');

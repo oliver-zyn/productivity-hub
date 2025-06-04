@@ -29,18 +29,16 @@ productivity-hub/
 │   │   ├── Dashboard.tsx           # Métricas e overview
 │   │   ├── Tasks.tsx               # Gerenciamento de tarefas
 │   │   ├── Projects.tsx            # Projetos e subtarefas
-│   │   ├── TeamsIntegration.tsx    # Integração Microsoft Teams
+│   │   ├── Meetings.tsx            # Reuniões
 │   │   ├── PomodoroTimer.tsx       # Timer Pomodoro
 │   │   ├── AIChat.tsx              # Chat com IA
 │   │   └── ConfigModal.tsx         # Modal de configuração
 │   │
 │   ├── 📁 hooks/                   # Custom React Hooks
 │   │   ├── usePomodoro.ts          # Lógica do timer Pomodoro
-│   │   ├── useTeamsIntegration.ts  # Integração Teams
 │   │   └── useAI.ts                # Integração OpenAI
 │   │
 │   ├── 📁 services/                # Serviços e APIs
-│   │   ├── teamsService.ts         # Microsoft Graph API
 │   │   └── aiService.ts            # OpenAI API
 │   │
 │   ├── 📁 stores/                  # Estado global (Zustand)
@@ -91,7 +89,7 @@ components/
 ├── Dashboard.tsx       # Métricas e visão geral
 ├── Tasks.tsx           # Lista e criação de tarefas
 ├── Projects.tsx        # Projetos com subtarefas
-├── TeamsIntegration.tsx # Microsoft Teams
+├── Meetings.tsx # Reuniões
 ├── PomodoroTimer.tsx   # Timer com estatísticas
 ├── AIChat.tsx          # Interface do chat IA
 └── ConfigModal.tsx     # Configuração de APIs
@@ -109,16 +107,6 @@ components/
 - Progress calculation
 ```
 
-### `useTeamsIntegration.ts`
-
-```typescript
-// Integração com Microsoft Teams
-- Authentication with MSAL
-- Meeting sync
-- Meeting creation
-- Error handling
-```
-
 ### `useAI.ts`
 
 ```typescript
@@ -130,18 +118,6 @@ components/
 ```
 
 ## 🔧 Serviços
-
-### `teamsService.ts`
-
-```typescript
-// Microsoft Graph API
-class TeamsService {
-  - authenticate()
-  - getMeetings()
-  - createMeeting()
-  - formatMeetingTime()
-}
-```
 
 ### `aiService.ts`
 
@@ -174,11 +150,6 @@ interface AppStore {
   updateProject;
   addSubtask;
 
-  // Teams
-  teamsIntegration: TeamsIntegration;
-  setTeamsIntegration;
-  addMeeting;
-
   // Pomodoro
   pomodoro: PomodoroState;
   startPomodoro;
@@ -210,7 +181,6 @@ interface AIMessage { id, type, content, timestamp }
 
 // State management
 interface PomodoroState { minutes, seconds, isActive, mode }
-interface TeamsIntegration { connected, meetings, error }
 interface Metrics { tasksCompleted, focusTime, ... }
 ```
 
@@ -219,10 +189,6 @@ interface Metrics { tasksCompleted, focusTime, ... }
 ### Variáveis de Ambiente
 
 ```bash
-# Microsoft Teams
-VITE_TEAMS_CLIENT_ID=...
-VITE_TEAMS_TENANT_ID=...
-
 # OpenAI
 VITE_OPENAI_API_KEY=...
 VITE_OPENAI_MODEL=...
@@ -233,7 +199,6 @@ VITE_OPENAI_MODEL=...
 ```typescript
 // src/config/index.ts
 export const CONFIG = {
-  TEAMS: { CLIENT_ID, TENANT_ID, SCOPES },
   OPENAI: { API_KEY, MODEL, BASE_URL },
 };
 

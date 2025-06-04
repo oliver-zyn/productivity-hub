@@ -1,7 +1,90 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { AppStore, Task, NewTask, Project, NewProject, Meeting, Subtask, AIMessage } from '../types';
-import { DEFAULT_TASKS, DEFAULT_PROJECTS, DEFAULT_MEETINGS, APP_CONSTANTS } from '../config';
+import type { 
+  AppStore, 
+  Task, 
+  NewTask, 
+  Project, 
+  NewProject, 
+  Meeting, 
+  NewMeeting,
+  MeetingTemplate,
+  Subtask, 
+  AIMessage 
+} from '../types';
+import { DEFAULT_TASKS, DEFAULT_PROJECTS, APP_CONSTANTS } from '../config';
+
+// Templates padrão de reuniões
+const DEFAULT_MEETING_TEMPLATES: MeetingTemplate[] = [
+  {
+    id: 1,
+    name: "Daily Standup",
+    duration: 30,
+    description: "Reunião diária da equipe para alinhamento",
+    platform: "teams",
+    defaultParticipants: ["equipe@empresa.com"],
+    isRecurring: true,
+    category: "trabalho",
+  },
+  {
+    id: 2,
+    name: "1:1 Meeting",
+    duration: 60,
+    description: "Reunião individual para feedback e alinhamento",
+    platform: "meet",
+    defaultParticipants: [],
+    isRecurring: false,
+    category: "trabalho",
+  },
+  {
+    id: 3,
+    name: "Review de Sprint",
+    duration: 90,
+    description: "Revisão dos resultados e planejamento",
+    platform: "zoom",
+    defaultParticipants: ["dev-team@empresa.com"],
+    isRecurring: false,
+    category: "trabalho",
+  },
+  {
+    id: 4,
+    name: "Aula Online",
+    duration: 120,
+    description: "Aula ou seminário acadêmico",
+    platform: "meet",
+    defaultParticipants: [],
+    isRecurring: true,
+    category: "faculdade",
+  },
+  {
+    id: 5,
+    name: "Reunião Familiar",
+    duration: 45,
+    description: "Conversa com família ou amigos",
+    platform: "custom",
+    defaultParticipants: [],
+    isRecurring: false,
+    category: "pessoal",
+  },
+];
+
+// Função para gerar links de reunião
+const generateMeetingLink = (platform: string): string => {
+  const meetingId = Math.random().toString(36).substring(2, 15);
+  
+  switch (platform) {
+    case 'meet':
+      return `https://meet.google.com/${meetingId}`;
+    case 'zoom':
+      return `https://zoom.us/j/${meetingId}`;
+    case 'teams':
+      return `https://teams.microsoft.com/l/meetup-join/19%3ameeting_${meetingId}`;
+    case 'custom':
+      return 'Link personalizado';
+    default:
+      return '#';
+  }
+};
 
 export const useAppStore = create<AppStore>()(
   subscribeWithSelector((set, get) => ({
@@ -23,7 +106,6 @@ export const useAppStore = create<AppStore>()(
         tasks: [...state.tasks, task],
       }));
       
-      // Update metrics
       get().updateMetrics();
     },
 
@@ -194,33 +276,73 @@ export const useAppStore = create<AppStore>()(
     },
 
     // ===================================
-    // Teams Integration State & Actions
+    // Meetings State & Actions - NOVO SISTEMA
     // ===================================
-    teamsIntegration: {
-      connected: false,
-      loading: false,
-      meetings: DEFAULT_MEETINGS,
-      lastSync: null,
-      error: null,
+    meetings: [],
+    meetingTemplates: DEFAULT_MEETING_TEMPLATES,
+
+    addMeeting: (newMeeting: NewMeeting) => {
+      const meeting: Meeting = {
+        id: Date.now(),
+        title: newMeeting.title,
+        time: `${newMeeting.startTime.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })} - ${new Date(newMeeting.startTime.getTime() + newMeeting.duration * 60000).toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}`,
+        duration: newMeeting.duration,
+        platform: newMeeting.platform,
+        link: generateMeetingLink(newMeeting.platform),
+        type: newMeeting.templateId ? 'template' : 'unica',
+        startTime: newMeeting.startTime,
+        endTime: new Date(newMeeting.startTime.getTime() + newMeeting.duration * 60000),
+        description: newMeeting.description || '',
+        participants: newMeeting.participants || [],
+        templateId: newMeeting.templateId,
+        isRecurring: newMeeting.isRecurring || false,
+        recurringPattern: newMeeting.recurringPattern,
+      };
+
+      set((state) => ({
+        meetings: [...state.meetings, meeting],
+      }));
+
+      get().updateMetrics();
     },
 
-    setTeamsIntegration: (integration) => {
+    updateMeeting: (id: number, updates: Partial<Meeting>) => {
       set((state) => ({
-        teamsIntegration: { ...state.teamsIntegration, ...integration },
+        meetings: state.meetings.map((meeting) =>
+          meeting.id === id ? { ...meeting, ...updates } : meeting
+        ),
+      }));
+    },
+
+    deleteMeeting: (id: number) => {
+      set((state) => ({
+        meetings: state.meetings.filter((meeting) => meeting.id !== id),
       }));
       
       get().updateMetrics();
     },
 
-    addMeeting: (meeting: Meeting) => {
+    addMeetingTemplate: (template: Omit<MeetingTemplate, 'id'>) => {
+      const newTemplate: MeetingTemplate = {
+        id: Date.now(),
+        ...template,
+      };
+
       set((state) => ({
-        teamsIntegration: {
-          ...state.teamsIntegration,
-          meetings: [...state.teamsIntegration.meetings, meeting],
-        },
+        meetingTemplates: [...state.meetingTemplates, newTemplate],
       }));
-      
-      get().updateMetrics();
+    },
+
+    deleteMeetingTemplate: (id: number) => {
+      set((state) => ({
+        meetingTemplates: state.meetingTemplates.filter((template) => template.id !== id),
+      }));
     },
 
     // ===================================
@@ -303,7 +425,6 @@ export const useAppStore = create<AppStore>()(
       set((state) => {
         const messages = [...state.aiChat.messages, newMessage];
         
-        // Keep only the last N messages to prevent memory issues
         if (messages.length > APP_CONSTANTS.UI.MAX_CHAT_MESSAGES) {
           messages.splice(0, messages.length - APP_CONSTANTS.UI.MAX_CHAT_MESSAGES);
         }
@@ -318,7 +439,7 @@ export const useAppStore = create<AppStore>()(
     },
 
     // ===================================
-    // Metrics State & Actions
+    // Metrics State & Actions - ATUALIZADO
     // ===================================
     metrics: {
       tasksCompleted: 0,
@@ -326,7 +447,8 @@ export const useAppStore = create<AppStore>()(
       pomodoroSessions: 0,
       focusTime: 0,
       projectsActive: DEFAULT_PROJECTS.filter(p => p.status === 'em_andamento').length,
-      meetingsToday: DEFAULT_MEETINGS.length,
+      meetingsToday: 0,
+      meetingsThisWeek: 0,
     },
 
     updateMetrics: () => {
@@ -336,13 +458,30 @@ export const useAppStore = create<AppStore>()(
         (project) => project.status === 'em_andamento'
       ).length;
       
+      // Calcular reuniões de hoje e da semana
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const meetingsToday = state.meetings.filter(meeting => {
+        const meetingDate = meeting.startTime.toDateString();
+        return meetingDate === today.toDateString();
+      }).length;
+      
+      const meetingsThisWeek = state.meetings.filter(meeting => {
+        return meeting.startTime >= startOfWeek && meeting.startTime <= endOfWeek;
+      }).length;
+      
       set((currentState) => ({
         metrics: {
           ...currentState.metrics,
           tasksCompleted,
           tasksPlanned: state.tasks.length,
           projectsActive,
-          meetingsToday: state.teamsIntegration.meetings.length,
+          meetingsToday,
+          meetingsThisWeek,
         },
       }));
     },
@@ -390,7 +529,8 @@ function getProjectStatus(progress: number): Project['status'] {
 
 export const useTasksSelector = () => useAppStore((state) => state.tasks);
 export const useProjectsSelector = () => useAppStore((state) => state.projects);
+export const useMeetingsSelector = () => useAppStore((state) => state.meetings);
+export const useMeetingTemplatesSelector = () => useAppStore((state) => state.meetingTemplates);
 export const useMetricsSelector = () => useAppStore((state) => state.metrics);
 export const usePomodoroSelector = () => useAppStore((state) => state.pomodoro);
 export const useAIChatSelector = () => useAppStore((state) => state.aiChat);
-export const useTeamsIntegrationSelector = () => useAppStore((state) => state.teamsIntegration);

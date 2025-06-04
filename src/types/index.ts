@@ -6,7 +6,8 @@ export type Priority = 'baixa' | 'media' | 'alta';
 export type TaskType = 'trabalho' | 'faculdade' | 'pessoal';
 export type ProjectStatus = 'nao_iniciado' | 'em_andamento' | 'concluido';
 export type ProjectCategory = 'trabalho' | 'faculdade' | 'pessoal';
-export type MeetingType = 'unica' | 'recorrente' | 'criada_ia';
+export type MeetingType = 'unica' | 'recorrente' | 'criada_ia' | 'template';
+export type MeetingPlatform = 'teams' | 'meet' | 'zoom' | 'custom';
 export type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
 // ===================================
@@ -63,27 +64,53 @@ export interface NewProject {
 }
 
 // ===================================
-// Meeting Types
+// Meeting Types - ATUALIZADOS
 // ===================================
 
-export interface Meeting {
-  id: number | string;
-  title: string;
-  time: string;
-  attendees: number;
-  link?: string;
-  type: MeetingType;
-  startTime?: Date;
-  endTime?: Date;
-  description?: string;
+export interface MeetingTemplate {
+  id: number;
+  name: string;
+  duration: number; // em minutos
+  description: string;
+  platform: MeetingPlatform;
+  defaultParticipants: string[];
+  isRecurring: boolean;
+  category: ProjectCategory;
 }
 
-export interface TeamsIntegration {
-  connected: boolean;
-  loading: boolean;
-  meetings: Meeting[];
-  lastSync: Date | null;
-  error: string | null;
+export interface Meeting {
+  id: number;
+  title: string;
+  time: string; // formato display
+  duration: number; // em minutos
+  platform: MeetingPlatform;
+  link?: string;
+  type: MeetingType;
+  startTime: Date;
+  endTime: Date;
+  description?: string;
+  participants: string[];
+  templateId?: number; // se criada a partir de template
+  isRecurring?: boolean;
+  recurringPattern?: 'daily' | 'weekly' | 'monthly';
+}
+
+export interface QuickMeetingOption {
+  label: string;
+  minutes: number; // minutos a partir de agora
+  icon: string;
+}
+
+export interface NewMeeting {
+  title: string;
+  startTime: Date;
+  duration: number;
+  platform: MeetingPlatform;
+  description?: string;
+  participants?: string[];
+  templateId?: number;
+  isRecurring?: boolean;
+  recurringPattern?: 'daily' | 'weekly' | 'monthly';
 }
 
 // ===================================
@@ -132,18 +159,12 @@ export interface Metrics {
   focusTime: number;
   projectsActive: number;
   meetingsToday: number;
+  meetingsThisWeek: number;
 }
 
 // ===================================
-// Configuration Types
+// Configuration Types - SIMPLIFICADOS
 // ===================================
-
-export interface TeamsConfig {
-  CLIENT_ID: string;
-  TENANT_ID: string;
-  REDIRECT_URI: string;
-  SCOPES: string[];
-}
 
 export interface OpenAIConfig {
   API_KEY: string;
@@ -152,12 +173,11 @@ export interface OpenAIConfig {
 }
 
 export interface AppConfig {
-  TEAMS: TeamsConfig;
   OPENAI: OpenAIConfig;
 }
 
 // ===================================
-// Store Types (Zustand)
+// Store Types (Zustand) - ATUALIZADOS
 // ===================================
 
 export interface AppStore {
@@ -177,10 +197,14 @@ export interface AppStore {
   toggleSubtask: (projectId: number, subtaskId: number) => void;
   deleteSubtask: (projectId: number, subtaskId: number) => void;
 
-  // Meetings
-  teamsIntegration: TeamsIntegration;
-  setTeamsIntegration: (integration: Partial<TeamsIntegration>) => void;
-  addMeeting: (meeting: Meeting) => void;
+  // Meetings - NOVO SISTEMA
+  meetings: Meeting[];
+  meetingTemplates: MeetingTemplate[];
+  addMeeting: (meeting: NewMeeting) => void;
+  updateMeeting: (id: number, updates: Partial<Meeting>) => void;
+  deleteMeeting: (id: number) => void;
+  addMeetingTemplate: (template: Omit<MeetingTemplate, 'id'>) => void;
+  deleteMeetingTemplate: (id: number) => void;
 
   // Pomodoro
   pomodoro: PomodoroState;
@@ -216,30 +240,6 @@ export interface APIResponse<T = Record<string, string | number | boolean | null
   message?: string;
 }
 
-export interface GraphAPIEvent {
-  id: string;
-  subject: string;
-  start: {
-    dateTime: string;
-    timeZone: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone: string;
-  };
-  attendees?: Array<{
-    emailAddress: {
-      address: string;
-      name: string;
-    };
-  }>;
-  onlineMeeting?: {
-    joinUrl: string;
-  };
-  webLink?: string;
-  recurrence?: Record<string, string | number | boolean | null | undefined>;
-}
-
 export interface OpenAIResponse {
   choices: Array<{
     message: {
@@ -252,4 +252,23 @@ export interface OpenAIResponse {
     completion_tokens: number;
     total_tokens: number;
   };
+}
+
+// ===================================
+// Utility Types
+// ===================================
+
+export interface QuickAction {
+  id: string;
+  label: string;
+  icon: string;
+  action: () => void;
+  category: 'meeting' | 'task' | 'project' | 'pomodoro';
+}
+
+export interface NotificationSettings {
+  meetingReminders: boolean;
+  pomodoroNotifications: boolean;
+  taskDeadlines: boolean;
+  soundEnabled: boolean;
 }

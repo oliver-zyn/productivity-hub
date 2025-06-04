@@ -5,14 +5,6 @@ import type { AppConfig } from '../types';
 // =====================================================
 
 export const CONFIG: AppConfig = {
-  // Microsoft Teams (Azure App Registration)
-  TEAMS: {
-    CLIENT_ID: import.meta.env.VITE_TEAMS_CLIENT_ID || "SEU_CLIENT_ID_AQUI",
-    TENANT_ID: import.meta.env.VITE_TEAMS_TENANT_ID || "SEU_TENANT_ID_AQUI",
-    REDIRECT_URI: typeof window !== 'undefined' ? window.location.origin : '',
-    SCOPES: ["User.Read", "Calendars.ReadWrite", "offline_access"]
-  },
-  
   // OpenAI API
   OPENAI: {
     API_KEY: import.meta.env.VITE_OPENAI_API_KEY || "SEU_OPENAI_API_KEY_AQUI",
@@ -29,11 +21,6 @@ export const isProduction = import.meta.env.PROD;
 export const isDevelopment = import.meta.env.DEV;
 
 // Check if required environment variables are set
-export const isTeamsConfigured = () => {
-  return CONFIG.TEAMS.CLIENT_ID !== "SEU_CLIENT_ID_AQUI" && 
-         CONFIG.TEAMS.TENANT_ID !== "SEU_TENANT_ID_AQUI";
-};
-
 export const isOpenAIConfigured = () => {
   return CONFIG.OPENAI.API_KEY !== "SEU_OPENAI_API_KEY_AQUI";
 };
@@ -55,6 +42,8 @@ export const APP_CONSTANTS = {
   STORAGE_KEYS: {
     TASKS: 'productivity-hub-tasks',
     PROJECTS: 'productivity-hub-projects',
+    MEETINGS: 'productivity-hub-meetings',
+    MEETING_TEMPLATES: 'productivity-hub-meeting-templates',
     POMODORO_SESSIONS: 'productivity-hub-pomodoro-sessions',
     USER_PREFERENCES: 'productivity-hub-preferences',
   },
@@ -71,17 +60,36 @@ export const APP_CONSTANTS = {
     TOAST_DURATION: 5000,
     MAX_SUBTASKS_PER_PROJECT: 20,
     MAX_CHAT_MESSAGES: 100,
+    MAX_MEETINGS_PER_DAY: 50,
   },
-  
-  // Microsoft Graph API
-  GRAPH_API: {
-    BASE_URL: 'https://graph.microsoft.com/v1.0',
-    ENDPOINTS: {
-      ME: '/me',
-      EVENTS: '/me/events',
-      CALENDAR_VIEW: '/me/calendar/calendarView',
-    }
-  }
+
+  // Meeting platforms
+  MEETING_PLATFORMS: {
+    TEAMS: {
+      name: 'Microsoft Teams',
+      baseUrl: 'https://teams.microsoft.com',
+      icon: '🔷',
+      color: 'blue',
+    },
+    MEET: {
+      name: 'Google Meet',
+      baseUrl: 'https://meet.google.com',
+      icon: '🟢',
+      color: 'green',
+    },
+    ZOOM: {
+      name: 'Zoom',
+      baseUrl: 'https://zoom.us',
+      icon: '🟦',
+      color: 'blue',
+    },
+    CUSTOM: {
+      name: 'Personalizado',
+      baseUrl: '',
+      icon: '🔗',
+      color: 'gray',
+    },
+  },
 };
 
 // =====================================================
@@ -91,7 +99,7 @@ export const APP_CONSTANTS = {
 export const DEFAULT_TASKS = [
   {
     id: 1,
-    text: "Daily às 10:00",
+    text: "Revisar tickets do sistema",
     type: "trabalho" as const,
     completed: false,
     priority: "alta" as const,
@@ -99,7 +107,7 @@ export const DEFAULT_TASKS = [
   },
   {
     id: 2,
-    text: "Revisar tickets do Movidesk",
+    text: "Finalizar projeto React",
     type: "trabalho" as const,
     completed: false,
     priority: "media" as const,
@@ -137,21 +145,123 @@ export const DEFAULT_PROJECTS = [
   },
 ];
 
-export const DEFAULT_MEETINGS = [
-  {
-    id: 1,
-    title: "Daily Standup",
-    time: "10:00 - 10:30",
-    attendees: 8,
-    link: "https://teams.microsoft.com/...",
-    type: "recorrente" as const,
-  },
-  {
-    id: 2,
-    title: "Review de Sprint",
-    time: "14:00 - 15:00",
-    attendees: 12,
-    link: "https://teams.microsoft.com/...",
-    type: "unica" as const,
-  },
+// =====================================================
+// Meeting utilities
+// =====================================================
+
+export const QUICK_MEETING_OPTIONS = [
+  { label: "Em 15min", minutes: 15, icon: "⚡", duration: 30 },
+  { label: "Em 30min", minutes: 30, icon: "🕐", duration: 60 },
+  { label: "Em 1h", minutes: 60, icon: "⏰", duration: 60 },
+  { label: "Amanhã 9h", minutes: -1, icon: "📅", duration: 60 }, // special case
 ];
+
+export const generateMeetingId = (): string => {
+  return Math.random().toString(36).substring(2, 15);
+};
+
+export const generateMeetingLink = (platform: string): string => {
+  const meetingId = generateMeetingId();
+  
+  switch (platform) {
+    case 'meet':
+      return `https://meet.google.com/${meetingId}`;
+    case 'zoom':
+      return `https://zoom.us/j/${meetingId}`;
+    case 'teams':
+      return `https://teams.microsoft.com/l/meetup-join/19%3ameeting_${meetingId}`;
+    case 'custom':
+      return 'Link personalizado';
+    default:
+      return '#';
+  }
+};
+
+export const getPlatformIcon = (platform: string): string => {
+  return APP_CONSTANTS.MEETING_PLATFORMS[platform.toUpperCase() as keyof typeof APP_CONSTANTS.MEETING_PLATFORMS]?.icon || '🔗';
+};
+
+export const getPlatformName = (platform: string): string => {
+  return APP_CONSTANTS.MEETING_PLATFORMS[platform.toUpperCase() as keyof typeof APP_CONSTANTS.MEETING_PLATFORMS]?.name || 'Personalizado';
+};
+
+// =====================================================
+// Date utilities
+// =====================================================
+
+export const formatMeetingTime = (startTime: Date, endTime: Date): string => {
+  const startFormatted = startTime.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const endFormatted = endTime.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${startFormatted} - ${endFormatted}`;
+};
+
+export const isToday = (date: Date): boolean => {
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
+
+export const isTomorrow = (date: Date): boolean => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return date.toDateString() === tomorrow.toDateString();
+};
+
+export const isThisWeek = (date: Date): boolean => {
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  return date >= startOfWeek && date <= endOfWeek;
+};
+
+// =====================================================
+// Notification utilities
+// =====================================================
+
+export const requestNotificationPermission = async (): Promise<boolean> => {
+  if ('Notification' in window) {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+  return false;
+};
+
+export const showNotification = (title: string, options?: NotificationOptions) => {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      ...options,
+    });
+  }
+};
+
+// =====================================================
+// Local storage helpers
+// =====================================================
+
+export const saveToStorage = <T>(key: string, data: T) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Erro ao salvar no localStorage:', error);
+  }
+};
+
+export const loadFromStorage = <T>(key: string): T | null => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch (error) {
+    console.error('Erro ao carregar do localStorage:', error);
+    return null;
+  }
+};

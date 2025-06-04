@@ -3,11 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Hub de produtividade com IA, integração Teams e timer Pomodoro",
+  "description": "Hub de produtividade com IA e timer Pomodoro",
   "keywords": [
     "produtividade",
     "pomodoro",
-    "teams",
     "ia",
     "typescript",
     "react"

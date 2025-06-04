@@ -1,6 +1,6 @@
 # 🚀 Productivity Hub
 
-Um hub de produtividade moderno e inteligente com integração Microsoft Teams, assistente IA e técnica Pomodoro.
+Um hub de produtividade moderno e inteligente com assistente IA e técnica Pomodoro.
 
 ![Productivity Hub](./public/og-image.png)
 
@@ -20,13 +20,6 @@ Um hub de produtividade moderno e inteligente com integração Microsoft Teams, 
 - 📅 Criação de reuniões por comando de voz
 - 📈 Análise inteligente de produtividade
 
-### 📅 **Integração Microsoft Teams**
-
-- 🔗 Sincronização automática de reuniões
-- ➕ Criação de reuniões via IA
-- 🔔 Notificações de próximas reuniões
-- 🌐 Links diretos para participar
-
 ### 🍅 **Timer Pomodoro Avançado**
 
 - ⏱️ Timer 25/5/15 minutos personalizável
@@ -41,9 +34,7 @@ Um hub de produtividade moderno e inteligente com integração Microsoft Teams, 
 - **State**: Zustand + Custom Hooks
 - **Icons**: Lucide React
 - **Integrations**:
-  - Microsoft Graph API (Teams)
   - OpenAI API (GPT-3.5/4)
-  - Azure MSAL (Authentication)
 
 ## 🚀 Quick Start
 
@@ -51,7 +42,6 @@ Um hub de produtividade moderno e inteligente com integração Microsoft Teams, 
 
 - Node.js 18+
 - npm ou yarn
-- Conta Microsoft (para Teams)
 - API Key OpenAI
 
 ### Instalação
@@ -81,31 +71,24 @@ npm run dev
    VITE_OPENAI_API_KEY=sk-sua_chave_aqui
    ```
 
-2. **Microsoft Teams** (opcional):
-   - Acesse [portal.azure.com](https://portal.azure.com)
-   - App registrations → New registration
-   - Configure conforme instruções no app
-
 ## 📁 Estrutura do Projeto
 
 ```
 productivity-hub/
 ├── src/
-│   ├── components/          # Componentes React
+│   ├── components/         # Componentes React
 │   │   ├── ui/             # Componentes base (Button, Input, Card)
 │   │   ├── Dashboard.tsx   # Métricas e overview
 │   │   ├── Tasks.tsx       # Gerenciamento de tarefas
 │   │   ├── Projects.tsx    # Projetos e subtarefas
-│   │   ├── TeamsIntegration.tsx  # Microsoft Teams
+│   │   ├── Meetings.tsx    # Reuniões
 │   │   ├── PomodoroTimer.tsx     # Timer Pomodoro
 │   │   ├── AIChat.tsx      # Chat com IA
 │   │   └── ConfigModal.tsx # Configurações
 │   ├── hooks/              # Custom hooks
 │   │   ├── usePomodoro.ts  # Lógica do Pomodoro
-│   │   ├── useTeamsIntegration.ts  # Teams API
 │   │   └── useAI.ts        # OpenAI integration
 │   ├── services/           # Serviços e APIs
-│   │   ├── teamsService.ts # Microsoft Graph API
 │   │   └── aiService.ts    # OpenAI API
 │   ├── stores/             # Estado global (Zustand)
 │   │   └── useAppStore.ts  # Store principal
@@ -125,37 +108,6 @@ productivity-hub/
 ```
 
 ## 🔧 Configuração Detalhada
-
-### Microsoft Teams
-
-1. **Registrar App no Azure**:
-
-   ```
-   Portal: https://portal.azure.com
-   → Azure Active Directory
-   → App registrations
-   → New registration
-   ```
-
-2. **Configurar Redirect URI**:
-
-   ```
-   Platform: Single-page application (SPA)
-   Redirect URI: http://localhost:3000 (dev)
-                 https://seu-dominio.com (prod)
-   ```
-
-3. **Permissões necessárias**:
-
-   - `User.Read`
-   - `Calendars.ReadWrite`
-   - `offline_access`
-
-4. **Variáveis de ambiente**:
-   ```bash
-   VITE_TEAMS_CLIENT_ID=seu_client_id
-   VITE_TEAMS_TENANT_ID=common  # ou seu tenant específico
-   ```
 
 ### OpenAI API
 
@@ -272,12 +224,6 @@ CMD ["npm", "run", "preview"]
 - ✅ Confirme se há créditos na conta
 - ✅ Reinicie o servidor após alterar .env
 
-**Teams não conecta**:
-
-- ✅ Verifique CLIENT_ID e TENANT_ID
-- ✅ Confirme redirect URI no Azure
-- ✅ Verifique permissões do app
-
 **Build falha**:
 
 - ✅ Node.js 18+
@@ -312,7 +258,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Lucide](https://lucide.dev/) - Ícones
 - [Zustand](https://zustand-demo.pmnd.rs/) - State management
-- [Microsoft Graph](https://docs.microsoft.com/en-us/graph/) - Teams API
 - [OpenAI](https://openai.com/) - IA integration
 
 ---

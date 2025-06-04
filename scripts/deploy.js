@@ -134,8 +134,6 @@ function deployToVercel() {
         { "source": "/(.*)", "destination": "/index.html" }
       ],
       "env": {
-        "VITE_TEAMS_CLIENT_ID": "@teams_client_id",
-        "VITE_TEAMS_TENANT_ID": "@teams_tenant_id",
         "VITE_OPENAI_API_KEY": "@openai_api_key",
         "VITE_OPENAI_MODEL": "@openai_model"
       }
@@ -152,7 +150,6 @@ function deployToVercel() {
   log('📋 Próximos passos:', 'cyan');
   log('  1. Configure as variáveis de ambiente no dashboard', 'yellow');
   log('  2. VITE_OPENAI_API_KEY (obrigatório)', 'yellow');
-  log('  3. VITE_TEAMS_CLIENT_ID e VITE_TEAMS_TENANT_ID (opcional)', 'yellow');
 }
 
 function deployToNetlify() {

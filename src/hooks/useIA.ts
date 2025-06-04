@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { useAppStore } from '../stores/useAppStore';
 import { aiService } from '../services/aiService';
-import { useTeamsIntegration } from './useTeamsIntegration';
-import type { AIMessage, NewProject, ProjectCategory } from '../types';
+import type { AIMessage, NewProject, ProjectCategory, NewMeeting } from '../types';
 
 export const useAI = () => {
   const aiChat = useAppStore((state) => state.aiChat);
@@ -12,16 +11,14 @@ export const useAI = () => {
   // Data for AI context
   const tasks = useAppStore((state) => state.tasks);
   const projects = useAppStore((state) => state.projects);
+  const meetings = useAppStore((state) => state.meetings); // Novo sistema
   const metrics = useAppStore((state) => state.metrics);
-  const teamsIntegration = useAppStore((state) => state.teamsIntegration);
   
   // Store actions
   const addProject = useAppStore((state) => state.addProject);
   const addSubtask = useAppStore((state) => state.addSubtask);
+  const addMeeting = useAppStore((state) => state.addMeeting); // Novo sistema
   const setLoadingSubtasks = useAppStore((state) => state.setLoadingSubtasks);
-  
-  // Teams integration
-  const { createMeeting } = useTeamsIntegration();
 
   // Send message to AI
   const sendMessage = useCallback(async (message: string) => {
@@ -42,7 +39,7 @@ export const useAI = () => {
       const context = {
         tasks,
         projects,
-        meetings: teamsIntegration.meetings,
+        meetings,
         metrics,
       };
 
@@ -74,7 +71,7 @@ export const useAI = () => {
     } finally {
       setAIChat({ isTyping: false });
     }
-  }, [addAIMessage, setAIChat, tasks, projects, teamsIntegration.meetings, metrics]);
+  }, [addAIMessage, setAIChat, tasks, projects, meetings, metrics]);
 
   // Process AI commands
   const processAICommand = useCallback(async (response: string) => {
@@ -95,9 +92,9 @@ export const useAI = () => {
         await handleProductivityAnalysis();
         break;
     }
-  }, [createMeeting, addProject]);
+  }, [addMeeting, addProject]);
 
-  // Handle meeting creation
+  // Handle meeting creation - Novo sistema
   const handleCreateMeeting = useCallback(async (data: { title: string; hour: number; minute: number; duration: number }) => {
     try {
       const { title, hour, minute, duration } = data;
@@ -105,22 +102,25 @@ export const useAI = () => {
       const startTime = new Date();
       startTime.setHours(hour, minute, 0, 0);
       
-      const endTime = new Date(startTime);
-      endTime.setMinutes(endTime.getMinutes() + duration);
+      const newMeeting: NewMeeting = {
+        title,
+        startTime,
+        duration: duration || 60,
+        platform: 'meet', // Default para Google Meet
+        description: 'Reunião criada pela IA',
+      };
 
-      const result = await createMeeting(title, startTime, endTime);
+      addMeeting(newMeeting);
       
-      if (result.success) {
-        const confirmMessage: Omit<AIMessage, 'id' | 'timestamp'> = {
-          type: 'ai',
-          content: `✅ Reunião "${title}" criada com sucesso para ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}!`,
-        };
-        addAIMessage(confirmMessage);
-      }
+      const confirmMessage: Omit<AIMessage, 'id' | 'timestamp'> = {
+        type: 'ai',
+        content: `✅ Reunião "${title}" criada com sucesso para ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}! Link gerado automaticamente.`,
+      };
+      addAIMessage(confirmMessage);
     } catch (error) {
       console.error('Error creating meeting:', error);
     }
-  }, [createMeeting, addAIMessage]);
+  }, [addMeeting, addAIMessage]);
 
   // Handle project creation
   const handleCreateProject = useCallback(async (data: { title: string; category: string; subtasks: string[] }) => {
@@ -164,7 +164,7 @@ export const useAI = () => {
       const context = {
         tasks,
         projects,
-        meetings: teamsIntegration.meetings,
+        meetings, // Novo sistema
         metrics,
       };
       
@@ -180,7 +180,7 @@ export const useAI = () => {
     } catch (error) {
       console.error('Error analyzing productivity:', error);
     }
-  }, [tasks, projects, teamsIntegration.meetings, metrics, addAIMessage]);
+  }, [tasks, projects, meetings, metrics, addAIMessage]);
 
   // Generate subtasks for a project
   const generateSubtasks = useCallback(async (projectId: number) => {
