@@ -573,7 +573,7 @@ export const useAppStore = create<AppStore>()(
         (project) => project.status === 'em_andamento'
       ).length;
       
-      // Calcular reuniões de hoje e da semana - CORRIGIDO
+      // Calcular reuniões de hoje e da semana
       const today = new Date();
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());

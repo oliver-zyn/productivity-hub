@@ -31,6 +31,7 @@ export const usePomodoro = () => {
     };
   }, [pomodoro.isActive, pomodoro.minutes, pomodoro.mode, pomodoro.seconds, pomodoro.sessions, setPomodoroState]);
 
+
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
     const newSessions = pomodoro.sessions + 1;
@@ -64,7 +65,15 @@ export const usePomodoro = () => {
 
     // Show notification (if supported)
     showNotification();
+
   }, [pomodoro.mode, pomodoro.sessions, setPomodoroState, updateMetrics]);
+
+  // Advance session when timer reaches 00:00
+  useEffect(() => {
+    if (!pomodoro.isActive && pomodoro.minutes === 0 && pomodoro.seconds === 0) {
+      handleTimerComplete();
+    }
+  }, [pomodoro.isActive, pomodoro.minutes, pomodoro.seconds, handleTimerComplete]);
 
   // Show browser notification
   const showNotification = useCallback(() => {
