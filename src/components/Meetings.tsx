@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -14,6 +14,8 @@ import {
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToastHelpers } from "@/components/ui/Toast";
 import type {
   Meeting,
   MeetingTemplate,
@@ -88,7 +90,31 @@ const useMeetings = () => {
     setMeetings((prev) => prev.filter((m) => m.id !== id));
   };
 
-  return { meetings, templates, addMeeting, deleteMeeting };
+  const updateMeeting = (id: number, data: NewMeeting) => {
+    setMeetings((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              ...data,
+              time: `${data.startTime.toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })} - ${new Date(
+                data.startTime.getTime() + data.duration * 60000
+              ).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}`,
+              startTime: data.startTime,
+              endTime: new Date(data.startTime.getTime() + data.duration * 60000),
+            }
+          : m
+      )
+    );
+  };
+
+  return { meetings, templates, addMeeting, deleteMeeting, updateMeeting };
 };
 
 // Gerar links automaticamente baseado na plataforma
@@ -169,21 +195,39 @@ interface QuickMeetingFormProps {
   onSubmit: (meeting: NewMeeting) => void;
   onCancel: () => void;
   template?: MeetingTemplate;
+  initialMeeting?: Meeting;
 }
 
 const QuickMeetingForm: React.FC<QuickMeetingFormProps> = ({
   onSubmit,
   onCancel,
   template,
+  initialMeeting,
 }) => {
   const [formData, setFormData] = useState({
-    title: template?.name || "",
-    duration: template?.duration || 60,
-    platform: template?.platform || ("meet" as MeetingPlatform),
-    description: template?.description || "",
-    participants: template?.defaultParticipants.join(", ") || "",
-    startTime: new Date(Date.now() + 30 * 60000), // 30 min a partir de agora
+    title: initialMeeting?.title || template?.name || "",
+    duration: initialMeeting?.duration || template?.duration || 60,
+    platform: initialMeeting?.platform || template?.platform || ("meet" as MeetingPlatform),
+    description: initialMeeting?.description || template?.description || "",
+    participants:
+      (initialMeeting?.participants && initialMeeting.participants.join(", ")) ||
+      template?.defaultParticipants.join(", ") ||
+      "",
+    startTime: initialMeeting?.startTime || new Date(Date.now() + 30 * 60000),
   });
+
+  useEffect(() => {
+    if (initialMeeting) {
+      setFormData({
+        title: initialMeeting.title,
+        duration: initialMeeting.duration,
+        platform: initialMeeting.platform,
+        description: initialMeeting.description || "",
+        participants: initialMeeting.participants.join(", "),
+        startTime: initialMeeting.startTime,
+      });
+    }
+  }, [initialMeeting]);
 
   const handleSubmit = () => {
     if (!formData.title.trim()) return;
@@ -298,7 +342,8 @@ const QuickMeetingForm: React.FC<QuickMeetingFormProps> = ({
 const MeetingItem: React.FC<{
   meeting: Meeting;
   onDelete: (id: number) => void;
-}> = ({ meeting, onDelete }) => {
+  onEdit: (meeting: Meeting) => void;
+}> = ({ meeting, onDelete, onEdit }) => {
   return (
     <div className="group flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
       <div className="flex items-center gap-3 flex-1">
@@ -356,6 +401,14 @@ const MeetingItem: React.FC<{
         />
 
         <Button
+          onClick={() => onEdit(meeting)}
+          variant="ghost"
+          size="sm"
+          icon={<Edit className="w-3 h-3" />}
+          title="Editar reunião"
+        />
+
+        <Button
           onClick={() => onDelete(meeting.id)}
           variant="ghost"
           size="sm"
@@ -369,11 +422,14 @@ const MeetingItem: React.FC<{
 };
 
 const Meetings: React.FC = () => {
-  const { meetings, templates, addMeeting, deleteMeeting } = useMeetings();
+  const { meetings, templates, addMeeting, deleteMeeting, updateMeeting } = useMeetings();
   const [showForm, setShowForm] = useState(false);
+  const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<
     MeetingTemplate | undefined
   >();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
+  const { success, error } = useToastHelpers();
 
   // Quick actions para criar reuniões rapidamente
   const quickActions = [
@@ -409,12 +465,40 @@ const Meetings: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleUpdateMeeting = (id: number, data: NewMeeting) => {
+    try {
+      updateMeeting(id, data);
+      success("Reunião atualizada!");
+    } catch (err) {
+      error("Erro ao atualizar reunião: " + (err as Error).message);
+    }
+  };
+
+  const handleDeleteMeeting = async (id: number, title: string) => {
+    const confirmed = await confirm({
+      title: "Deletar Reunião",
+      message: `Tem certeza que deseja deletar a reunião "${title}"?`,
+      variant: "danger",
+      confirmText: "Deletar",
+    });
+
+    if (confirmed) {
+      try {
+        deleteMeeting(id);
+        success("Reunião deletada!");
+      } catch (err) {
+        error("Erro ao deletar reunião: " + (err as Error).message);
+      }
+    }
+  };
+
   const todaysMeetings = meetings.filter((m) => {
     const today = new Date().toDateString();
     return m.startTime.toDateString() === today;
   });
 
   return (
+    <>
     <Card>
       <CardHeader
         title="Reuniões"
@@ -507,11 +591,25 @@ const Meetings: React.FC = () => {
             </div>
           ) : (
             meetings.map((meeting) => (
-              <MeetingItem
-                key={meeting.id}
-                meeting={meeting}
-                onDelete={deleteMeeting}
-              />
+              editingMeetingId === meeting.id ? (
+                <div key={meeting.id} className="mb-2">
+                  <QuickMeetingForm
+                    onSubmit={(data) => {
+                      handleUpdateMeeting(meeting.id, data);
+                      setEditingMeetingId(null);
+                    }}
+                    onCancel={() => setEditingMeetingId(null)}
+                    initialMeeting={meeting}
+                  />
+                </div>
+              ) : (
+                <MeetingItem
+                  key={meeting.id}
+                  meeting={meeting}
+                  onDelete={(id) => handleDeleteMeeting(id, meeting.title)}
+                  onEdit={() => setEditingMeetingId(meeting.id)}
+                />
+              )
             ))
           )}
         </div>
@@ -537,6 +635,8 @@ const Meetings: React.FC = () => {
         )}
       </CardContent>
     </Card>
+    <ConfirmDialog />
+    </>
   );
 };
 

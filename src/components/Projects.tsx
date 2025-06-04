@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FolderOpen,
   Plus,
@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Brain,
   Trash2,
+  Edit,
   Calendar,
   Target,
 } from "lucide-react";
@@ -16,20 +17,34 @@ import { useAppStore, useProjectsSelector } from "../stores/useAppStore";
 import { useAI } from "../hooks/useIA";
 import { getCategoryColors, cn } from "../utils/cn";
 import type { NewProject, ProjectCategory } from "../types";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToastHelpers } from "@/components/ui/Toast";
 
 interface ProjectFormProps {
   onSubmit: (project: NewProject) => void;
   onCancel: () => void;
+  initialData?: NewProject;
+  isEditing?: boolean;
 }
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState<NewProject & { showForm: boolean }>({
-    title: "",
-    category: "trabalho",
-    deadline: "",
-    description: "",
-    showForm: true,
+const ProjectForm: React.FC<ProjectFormProps> = ({
+  onSubmit,
+  onCancel,
+  initialData,
+  isEditing,
+}) => {
+  const [formData, setFormData] = useState<NewProject>({
+    title: initialData?.title || "",
+    category: initialData?.category || "trabalho",
+    deadline: initialData?.deadline || "",
+    description: initialData?.description || "",
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleSubmit = () => {
     if (!formData.title.trim() || !formData.deadline) return;
@@ -93,7 +108,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ onSubmit, onCancel }) => {
           icon={<Plus className="w-4 h-4" />}
           className="flex-1"
         >
-          Criar Projeto
+          {isEditing ? "Salvar" : "Criar Projeto"}
         </Button>
         <Button variant="ghost" onClick={onCancel}>
           Cancelar
@@ -108,9 +123,12 @@ const Projects: React.FC = () => {
   const [newSubtaskInputs, setNewSubtaskInputs] = useState<
     Record<number, string>
   >({});
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
 
   const projects = useProjectsSelector();
   const addProject = useAppStore((state) => state.addProject);
+  const updateProject = useAppStore((state) => state.updateProject);
+  const deleteProject = useAppStore((state) => state.deleteProject);
   const toggleProjectExpanded = useAppStore(
     (state) => state.toggleProjectExpanded
   );
@@ -118,6 +136,9 @@ const Projects: React.FC = () => {
   const toggleSubtask = useAppStore((state) => state.toggleSubtask);
   const deleteSubtask = useAppStore((state) => state.deleteSubtask);
   const loadingSubtasks = useAppStore((state) => state.loadingSubtasks);
+
+  const { confirm, ConfirmDialog } = useConfirmDialog();
+  const { success, error } = useToastHelpers();
 
   const { generateSubtasks } = useAI();
 
@@ -132,6 +153,33 @@ const Projects: React.FC = () => {
 
     addSubtask(projectId, text);
     setNewSubtaskInputs((prev) => ({ ...prev, [projectId]: "" }));
+  };
+
+  const handleUpdateProject = (id: number, data: NewProject) => {
+    try {
+      updateProject(id, data);
+      success("Projeto atualizado!");
+    } catch (err) {
+      error("Erro ao atualizar projeto: " + (err as Error).message);
+    }
+  };
+
+  const handleDeleteProject = async (id: number, title: string) => {
+    const confirmed = await confirm({
+      title: "Deletar Projeto",
+      message: `Tem certeza que deseja deletar o projeto "${title}"?`,
+      variant: "danger",
+      confirmText: "Deletar",
+    });
+
+    if (confirmed) {
+      try {
+        deleteProject(id);
+        success("Projeto deletado!");
+      } catch (err) {
+        error("Erro ao deletar projeto: " + (err as Error).message);
+      }
+    }
   };
 
   const getDaysUntilDeadline = (deadline: string) => {
@@ -156,6 +204,7 @@ const Projects: React.FC = () => {
   };
 
   return (
+    <>
     <Card>
       <CardHeader
         title="Projetos"
@@ -194,6 +243,30 @@ const Projects: React.FC = () => {
           ) : (
             projects.map((project) => {
               const daysLeft = getDaysUntilDeadline(project.deadline);
+
+              if (editingProjectId === project.id) {
+                return (
+                  <div
+                    key={project.id}
+                    className="border border-gray-600/50 rounded-lg p-4 bg-gray-700/20"
+                  >
+                    <ProjectForm
+                      initialData={{
+                        title: project.title,
+                        category: project.category,
+                        deadline: project.deadline,
+                        description: project.description,
+                      }}
+                      isEditing
+                      onSubmit={(data) => {
+                        handleUpdateProject(project.id, data);
+                        setEditingProjectId(null);
+                      }}
+                      onCancel={() => setEditingProjectId(null)}
+                    />
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -252,6 +325,23 @@ const Projects: React.FC = () => {
                       </div>
                       <div className="text-sm text-gray-500">
                         {new Date(project.deadline).toLocaleDateString("pt-BR")}
+                      </div>
+                      <div className="flex gap-1 justify-end mt-1">
+                        <Button
+                          onClick={() => setEditingProjectId(project.id)}
+                          variant="ghost"
+                          size="sm"
+                          icon={<Edit className="w-4 h-4" />}
+                          title="Editar projeto"
+                        />
+                        <Button
+                          onClick={() => handleDeleteProject(project.id, project.title)}
+                          variant="ghost"
+                          size="sm"
+                          icon={<Trash2 className="w-4 h-4" />}
+                          className="text-red-400 hover:text-red-300"
+                          title="Deletar projeto"
+                        />
                       </div>
                     </div>
                   </div>
@@ -360,6 +450,8 @@ const Projects: React.FC = () => {
         </div>
       </CardContent>
     </Card>
+    <ConfirmDialog />
+    </>
   );
 };
 
