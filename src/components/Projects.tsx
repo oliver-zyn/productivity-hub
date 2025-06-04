@@ -90,7 +90,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         onChange={(e) =>
           setFormData((prev) => ({ ...prev, deadline: e.target.value }))
         }
-        label="Deadline"
       />
 
       <Input
