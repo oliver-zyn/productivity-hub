@@ -36,7 +36,7 @@ productivity-hub/
 │   │
 │   ├── 📁 hooks/                   # Custom React Hooks
 │   │   ├── usePomodoro.ts          # Lógica do timer Pomodoro
-│   │   └── useAI.ts                # Integração OpenAI
+│   │   └── useIA.ts                # Integração OpenAI
 │   │
 │   ├── 📁 services/                # Serviços e APIs
 │   │   └── aiService.ts            # OpenAI API
@@ -107,7 +107,7 @@ components/
 - Progress calculation
 ```
 
-### `useAI.ts`
+### `useIA.ts`
 
 ```typescript
 // Integração com OpenAI

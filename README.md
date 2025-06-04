@@ -87,7 +87,7 @@ productivity-hub/
 │   │   └── ConfigModal.tsx # Configurações
 │   ├── hooks/              # Custom hooks
 │   │   ├── usePomodoro.ts  # Lógica do Pomodoro
-│   │   └── useAI.ts        # OpenAI integration
+│   │   └── useIA.ts        # OpenAI integration
 │   ├── services/           # Serviços e APIs
 │   │   └── aiService.ts    # OpenAI API
 │   ├── stores/             # Estado global (Zustand)
