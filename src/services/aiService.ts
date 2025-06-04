@@ -72,6 +72,204 @@ class AIService {
   }
 
   // ===================================
+  // Command Processing - CORRIGIDO
+  // ===================================
+  parseAICommand(response: string): AICommand | null {
+    console.log('🤖 Parsing AI response (SUBSTRING VERSION)');
+    console.log('Raw response:', response);
+    
+    // Limpar resposta
+    const cleanResponse = response
+      .replace(/\r?\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log('Cleaned response:', cleanResponse);
+    
+    // === CRIAR PROJETO ===
+    if (cleanResponse.includes('AÇÃO:CREATE_PROJECT') || cleanResponse.includes('ACAO:CREATE_PROJECT')) {
+      console.log('🎯 CREATE_PROJECT detected');
+      
+      try {
+        // MÉTODO MANUAL - MAIS CONFIÁVEL
+        const titleStart = cleanResponse.indexOf('TÍTULO:');
+        const categoryStart = cleanResponse.indexOf('CATEGORIA:');
+        const subtasksStart = cleanResponse.indexOf('SUBTAREFAS:');
+        
+        // Encontrar fim da seção de comando
+        const endMarkers = ['Projeto criado', 'CONTEXTO ATUAL', '🚀', 'sucesso!'];
+        let commandEnd = cleanResponse.length;
+        
+        for (const marker of endMarkers) {
+          const markerPos = cleanResponse.indexOf(marker);
+          if (markerPos > subtasksStart && markerPos < commandEnd) {
+            commandEnd = markerPos;
+          }
+        }
+        
+        console.log('🔍 Positions found:');
+        console.log('TÍTULO start:', titleStart);
+        console.log('CATEGORIA start:', categoryStart);
+        console.log('SUBTAREFAS start:', subtasksStart);
+        console.log('Command end:', commandEnd);
+        
+        // EXTRAIR POR SUBSTRING
+        let title = 'Novo Projeto';
+        let category = 'pessoal';
+        let subtasksString = '';
+        
+        if (titleStart > -1 && categoryStart > titleStart) {
+          title = cleanResponse.substring(titleStart + 7, categoryStart).trim();
+          console.log('📝 Extracted title:', title);
+        }
+        
+        if (categoryStart > -1 && subtasksStart > categoryStart) {
+          category = cleanResponse.substring(categoryStart + 10, subtasksStart).trim().toLowerCase();
+          console.log('📂 Extracted category:', category);
+        }
+        
+        if (subtasksStart > -1) {
+          subtasksString = cleanResponse.substring(subtasksStart + 11, commandEnd).trim();
+          console.log('📝 Extracted subtasks string:', subtasksString);
+        }
+        
+        // LIMPAR E VALIDAR DADOS
+        title = title.replace(/[^\w\s\-.àáâãäéêëíîïóôõöúûüçÀÁÂÃÄÉÊËÍÎÏÓÔÕÖÚÛÜÇ]/g, '').trim();
+        category = category.replace(/[^\w]/g, '').trim();
+        
+        // Se título ainda vazio, tentar fallback
+        if (!title || title.length === 0) {
+          title = 'Novo Projeto';
+          console.log('⚠️ Title empty, using fallback');
+        }
+        
+        // Validar categoria
+        const validCategories = ['trabalho', 'faculdade', 'pessoal'];
+        if (!validCategories.includes(category)) {
+          category = 'pessoal';
+          console.log('⚠️ Invalid category, using fallback');
+        }
+        
+        // PROCESSAR SUBTAREFAS
+        const subtasks = subtasksString 
+          ? subtasksString.split('|').map(s => s.trim()).filter(s => s.length > 0)
+          : [];
+        
+        console.log('📊 FINAL EXTRACTED DATA:');
+        console.log('Title:', title);
+        console.log('Category:', category);
+        console.log('Subtasks:', subtasks);
+        console.log('Subtasks count:', subtasks.length);
+        
+        // VERIFICAR SE CAPTUROU DADOS REAIS
+        if (title === 'Novo Projeto' && category === 'pessoal' && subtasks.length === 0) {
+          console.log('❌ All values are defaults - extraction may have failed');
+          
+          // ÚLTIMO FALLBACK - REGEX SUPER SIMPLES
+          const fallbackTitle = cleanResponse.match(/TÍTULO:\s*([^]+?)CATEGORIA/i)?.[1]?.trim();
+          const fallbackCategory = cleanResponse.match(/CATEGORIA:\s*([^]+?)SUBTAREFAS/i)?.[1]?.trim();
+          const fallbackSubtasks = cleanResponse.match(/SUBTAREFAS:\s*([^]+?)(?:Projeto|$)/i)?.[1]?.trim();
+          
+          if (fallbackTitle) {
+            console.log('🔄 Using fallback extraction:');
+            console.log('Fallback title:', fallbackTitle);
+            console.log('Fallback category:', fallbackCategory);
+            console.log('Fallback subtasks:', fallbackSubtasks);
+            
+            return {
+              type: 'CREATE_PROJECT',
+              data: {
+                title: fallbackTitle.replace(/[^\w\s\-.àáâãäéêëíîïóôõöúûüçÀÁÂÃÄÉÊËÍÎÏÓÔÕÖÚÛÜÇ]/g, '').trim() || 'Projeto da IA',
+                category: (fallbackCategory?.toLowerCase().replace(/[^\w]/g, '') || 'pessoal'),
+                subtasks: fallbackSubtasks ? fallbackSubtasks.split('|').map(s => s.trim()).filter(Boolean) : [],
+              },
+            };
+          }
+        }
+        
+        return {
+          type: 'CREATE_PROJECT',
+          data: {
+            title,
+            category,
+            subtasks,
+          },
+        };
+        
+      } catch (error) {
+        console.error('❌ Error in substring extraction:', error);
+        
+        // FALLBACK FINAL - Tentar detectar informações básicas
+        const basicTitle = cleanResponse.match(/projeto\s+sobre\s+([^.!?]+)/i)?.[1]?.trim() || 'Projeto da IA';
+        return {
+          type: 'CREATE_PROJECT',
+          data: {
+            title: basicTitle,
+            category: 'pessoal',
+            subtasks: [],
+          },
+        };
+      }
+    }
+    
+    // === CRIAR REUNIÃO ===
+    if (cleanResponse.includes('AÇÃO:CREATE_MEETING') || cleanResponse.includes('ACAO:CREATE_MEETING')) {
+      console.log('🎯 CREATE_MEETING detected');
+      
+      // Usar mesmo método de substring para reuniões
+      const titleStart = cleanResponse.indexOf('TÍTULO:');
+      const timeStart = cleanResponse.indexOf('HORÁRIO:');
+      const durationStart = cleanResponse.indexOf('DURAÇÃO:');
+      
+      let title = 'Nova Reunião';
+      let timeString = '';
+      let durationString = '';
+      
+      if (titleStart > -1 && timeStart > titleStart) {
+        title = cleanResponse.substring(titleStart + 7, timeStart).trim();
+      }
+      
+      if (timeStart > -1) {
+        const timeEnd = durationStart > timeStart ? durationStart : timeStart + 20;
+        timeString = cleanResponse.substring(timeStart + 8, timeEnd).trim();
+      }
+      
+      if (durationStart > -1) {
+        durationString = cleanResponse.substring(durationStart + 8, durationStart + 20).trim();
+      }
+      
+      // Extrair hora e minuto
+      const timeMatch = timeString.match(/(\d{1,2}):(\d{2})/);
+      const hour = timeMatch ? parseInt(timeMatch[1]) : 14;
+      const minute = timeMatch ? parseInt(timeMatch[2]) : 0;
+      const duration = parseInt(durationString) || 60;
+      
+      console.log('📅 Meeting data:', { title, hour, minute, duration });
+      
+      return {
+        type: 'CREATE_MEETING',
+        data: { title, hour, minute, duration },
+      };
+    }
+    
+    // === ANÁLISE DE PRODUTIVIDADE ===
+    const lowerResponse = cleanResponse.toLowerCase();
+    if (lowerResponse.includes('produtividade') || 
+        lowerResponse.includes('análise') ||
+        lowerResponse.includes('desempenho')) {
+      
+      console.log('📊 PRODUCTIVITY ANALYSIS detected');
+      return {
+        type: 'ANALYZE_PRODUCTIVITY',
+        data: {},
+      };
+    }
+    
+    console.log('❌ No command detected');
+    return null;
+  }
+
+  // ===================================
   // Specialized AI Functions
   // ===================================
   async generateSubtasks(projectTitle: string, projectDescription: string): Promise<APIResponse<string[]>> {
@@ -165,78 +363,19 @@ Use um tom motivador e personalizado. Máximo 200 palavras.`;
   }
 
   // ===================================
-  // Command Processing
-  // ===================================
-  parseAICommand(response: string): AICommand | null {
-    const lowerResponse = response.toLowerCase();
-    
-    // Meeting creation command
-    if (lowerResponse.includes('ação:create_meeting') || 
-        (lowerResponse.includes('reunião') && /\d{1,2}[h:]\d{0,2}/.test(lowerResponse))) {
-      
-      const titleMatch = response.match(/título:(.+)/i);
-      const timeMatch = response.match(/(\d{1,2})[h:](\d{0,2})/);
-      const durationMatch = response.match(/duração:(\d+)/i) || response.match(/(\d+)\s*min/);
-      
-      if (timeMatch) {
-        return {
-          type: 'CREATE_MEETING',
-          data: {
-            title: titleMatch?.[1]?.trim() || 'Reunião',
-            hour: parseInt(timeMatch[1]),
-            minute: parseInt(timeMatch[2] || '0'),
-            duration: durationMatch ? parseInt(durationMatch[1]) : 60,
-          },
-        };
-      }
-    }
-    
-    // Project creation command
-    if (lowerResponse.includes('ação:create_project') || 
-        lowerResponse.includes('criar projeto')) {
-      
-      const titleMatch = response.match(/título:(.+)/i);
-      const categoryMatch = response.match(/categoria:(.+)/i);
-      const subtasksMatch = response.match(/subtarefas:(.+)/i);
-      
-      return {
-        type: 'CREATE_PROJECT',
-        data: {
-          title: titleMatch?.[1]?.trim() || 'Novo Projeto',
-          category: categoryMatch?.[1]?.trim() || 'pessoal',
-          subtasks: subtasksMatch?.[1]?.split('|').map(s => s.trim()) || [],
-        },
-      };
-    }
-    
-    // Productivity analysis command
-    if (lowerResponse.includes('produtividade') || 
-        lowerResponse.includes('análise') ||
-        lowerResponse.includes('como estou')) {
-      
-      return {
-        type: 'ANALYZE_PRODUCTIVITY',
-        data: {},
-      };
-    }
-    
-    return null;
-  }
-
-  // ===================================
   // Helper Methods
   // ===================================
   private buildSystemPrompt(context?: AIContext): string {
     const basePrompt = `Você é um assistente de produtividade pessoal integrado a um hub de tarefas e projetos.
 
 SUAS CAPACIDADES:
-1. CRIAR REUNIÕES: Se o usuário mencionar "reunião" + horário + tema, responda no formato:
+1. CRIAR REUNIÕES: Se o usuário mencionar "reunião" + horário + tema, responda SEMPRE no formato:
    AÇÃO:CREATE_MEETING
    TÍTULO:[título da reunião]
    HORÁRIO:[HH:MM]
    DURAÇÃO:[minutos]
 
-2. CRIAR PROJETOS: Se o usuário quiser um projeto, responda no formato:
+2. CRIAR PROJETOS: Se o usuário quiser um projeto, responda SEMPRE no formato:
    AÇÃO:CREATE_PROJECT
    TÍTULO:[título do projeto]
    CATEGORIA:[trabalho/faculdade/pessoal]
@@ -244,7 +383,22 @@ SUAS CAPACIDADES:
 
 3. ANÁLISE: Analise a produtividade baseado no contexto fornecido
 
-Seja conversacional, útil e direto. Use emojis quando apropriado. Mantenha respostas concisas (máximo 150 palavras).`;
+IMPORTANTE:
+- Quando detectar uma solicitação de criação, SEMPRE use o formato exato acima
+- Seja direto e use os comandos de AÇÃO quando apropriado
+- Seja conversacional e útil para outras perguntas
+- Use emojis quando apropriado
+- Mantenha respostas concisas
+
+Exemplo de resposta para "criar projeto sobre machine learning":
+✨ Claro! Vou criar um projeto sobre machine learning para você.
+
+AÇÃO:CREATE_PROJECT
+TÍTULO:Aprendizado de Machine Learning
+CATEGORIA:pessoal
+SUBTAREFAS:Estudar conceitos básicos|Escolher linguagem e ferramentas|Fazer primeiro projeto prático|Estudar algoritmos avançados|Criar portfolio
+
+Projeto criado com sucesso! 🚀`;
 
     if (!context) return basePrompt;
 

@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "@/styles/main.css";
+import { ToastProvider } from "@/components/ui/Toast"; // ADICIONADO
 
 // Error boundary component
 class ErrorBoundary extends React.Component<
@@ -68,7 +69,12 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <ToastProvider>
+        {" "}
+        {/* ADICIONADO */}
+        <App />
+      </ToastProvider>{" "}
+      {/* ADICIONADO */}
     </ErrorBoundary>
   </React.StrictMode>
 );

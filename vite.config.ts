@@ -16,6 +16,7 @@ export default defineConfig({
       '@/hooks': path.resolve(__dirname, './src/hooks'),
       '@/services': path.resolve(__dirname, './src/services'),
       '@/contexts': path.resolve(__dirname, './src/contexts'),
+      '@/stores': path.resolve(__dirname, './src/stores'), // ADICIONADO
       '@/types': path.resolve(__dirname, './src/types'),
       '@/utils': path.resolve(__dirname, './src/utils'),
       '@/config': path.resolve(__dirname, './src/config'),
@@ -24,5 +25,17 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+  },
+  // Otimizações de build
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['lucide-react'],
+          stores: ['zustand'],
+        },
+      },
+    },
   },
 })

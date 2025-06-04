@@ -1,7 +1,77 @@
 // ===================================
-// Core Types
+// Store Types (Zustand) - ATUALIZADOS COM NOVOS MÉTODOS
 // ===================================
 
+export interface AppStore {
+  // Tasks
+  tasks: Task[];
+  addTask: (task: NewTask) => void;
+  toggleTask: (id: number) => void;
+  deleteTask: (id: number) => void;
+  reorderTasks: (oldIndex: number, newIndex: number) => void; // ADICIONADO
+
+  // Projects
+  projects: Project[];
+  addProject: (project: NewProject) => void;
+  updateProject: (id: number, updates: Partial<Project>) => void;
+  deleteProject: (id: number) => void;
+  toggleProjectExpanded: (id: number) => void;
+  addSubtask: (projectId: number, text: string) => void;
+  toggleSubtask: (projectId: number, subtaskId: number) => void;
+  deleteSubtask: (projectId: number, subtaskId: number) => void;
+
+  // Meetings
+  meetings: Meeting[];
+  meetingTemplates: MeetingTemplate[];
+  addMeeting: (meeting: NewMeeting) => void;
+  updateMeeting: (id: number, updates: Partial<Meeting>) => void;
+  deleteMeeting: (id: number) => void;
+  addMeetingTemplate: (template: Omit<MeetingTemplate, 'id'>) => void;
+  deleteMeetingTemplate: (id: number) => void;
+
+  // Pomodoro
+  pomodoro: PomodoroState;
+  setPomodoroState: (state: Partial<PomodoroState>) => void;
+  startPomodoro: () => void;
+  pausePomodoro: () => void;
+  resetPomodoro: () => void;
+
+  // AI Chat
+  aiChat: AIChat;
+  setAIChat: (chat: Partial<AIChat>) => void;
+  addAIMessage: (message: Omit<AIMessage, 'id' | 'timestamp'>) => void;
+
+  // Metrics
+  metrics: Metrics;
+  updateMetrics: () => void;
+
+  // UI State
+  showConfig: boolean;
+  setShowConfig: (show: boolean) => void;
+  loadingSubtasks: Record<number, boolean>;
+  setLoadingSubtasks: (projectId: number, loading: boolean) => void;
+
+  // NOVOS MÉTODOS ADICIONADOS
+  clearAllData: () => void;
+  exportData: () => void;
+  importData: (data: ImportDataType) => boolean;
+}
+
+export interface ImportDataType {
+  tasks?: Task[];
+  projects?: Project[];
+  meetings?: Meeting[];
+  meetingTemplates?: MeetingTemplate[];
+  pomodoroSessions?: number;
+  exportedAt?: string;
+  version?: string;
+}
+
+// ===================================
+// TODOS OS OUTROS TIPOS EXISTENTES (manter igual)
+// ===================================
+
+// Core Types
 export type Priority = 'baixa' | 'media' | 'alta';
 export type TaskType = 'trabalho' | 'faculdade' | 'pessoal';
 export type ProjectStatus = 'nao_iniciado' | 'em_andamento' | 'concluido';
@@ -64,7 +134,7 @@ export interface NewProject {
 }
 
 // ===================================
-// Meeting Types - ATUALIZADOS
+// Meeting Types
 // ===================================
 
 export interface MeetingTemplate {
@@ -163,7 +233,7 @@ export interface Metrics {
 }
 
 // ===================================
-// Configuration Types - SIMPLIFICADOS
+// Configuration Types
 // ===================================
 
 export interface OpenAIConfig {
@@ -174,59 +244,6 @@ export interface OpenAIConfig {
 
 export interface AppConfig {
   OPENAI: OpenAIConfig;
-}
-
-// ===================================
-// Store Types (Zustand) - ATUALIZADOS
-// ===================================
-
-export interface AppStore {
-  // Tasks
-  tasks: Task[];
-  addTask: (task: NewTask) => void;
-  toggleTask: (id: number) => void;
-  deleteTask: (id: number) => void;
-
-  // Projects
-  projects: Project[];
-  addProject: (project: NewProject) => void;
-  updateProject: (id: number, updates: Partial<Project>) => void;
-  deleteProject: (id: number) => void;
-  toggleProjectExpanded: (id: number) => void;
-  addSubtask: (projectId: number, text: string) => void;
-  toggleSubtask: (projectId: number, subtaskId: number) => void;
-  deleteSubtask: (projectId: number, subtaskId: number) => void;
-
-  // Meetings - NOVO SISTEMA
-  meetings: Meeting[];
-  meetingTemplates: MeetingTemplate[];
-  addMeeting: (meeting: NewMeeting) => void;
-  updateMeeting: (id: number, updates: Partial<Meeting>) => void;
-  deleteMeeting: (id: number) => void;
-  addMeetingTemplate: (template: Omit<MeetingTemplate, 'id'>) => void;
-  deleteMeetingTemplate: (id: number) => void;
-
-  // Pomodoro
-  pomodoro: PomodoroState;
-  setPomodoroState: (state: Partial<PomodoroState>) => void;
-  startPomodoro: () => void;
-  pausePomodoro: () => void;
-  resetPomodoro: () => void;
-
-  // AI Chat
-  aiChat: AIChat;
-  setAIChat: (chat: Partial<AIChat>) => void;
-  addAIMessage: (message: Omit<AIMessage, 'id' | 'timestamp'>) => void;
-
-  // Metrics
-  metrics: Metrics;
-  updateMetrics: () => void;
-
-  // UI State
-  showConfig: boolean;
-  setShowConfig: (show: boolean) => void;
-  loadingSubtasks: Record<number, boolean>;
-  setLoadingSubtasks: (projectId: number, loading: boolean) => void;
 }
 
 // ===================================
